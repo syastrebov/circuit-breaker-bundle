@@ -1,0 +1,29 @@
+name: Tests
+
+on:
+  push:
+
+jobs:
+  php-unit:
+    name: PHP Unit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy
+        run: |
+          docker compose up -d
+
+      - name: Composer install
+        run: composer install --optimize-autoloader --no-interaction --no-progress --prefer-dist --ignore-platform-reqs
+
+      - name: PHPStan
+        run: docker exec -t symfony-circuit-breaker-php vendor/bin/phpstan analyse src tests --memory-limit=256M
+
+      - name: PHPcs
+        run: docker exec -t symfony-circuit-breaker-php vendor/bin/phpcs src tests
+
+      - name: Run phpunit
+        run: docker exec -t symfony-circuit-breaker-php vendor/bin/phpunit
