@@ -1,0 +1,10 @@
+circuit_breaker:
+  provider: redis
+
+  connections:
+    redis:
+      nodes:
+        - host: redis-node-1
+        - host: redis-node-2
+        - host: redis-node-3
+          port: 6379

@@ -1,0 +1,7 @@
+circuit_breaker:
+  provider: memcached
+
+  connections:
+    memcached:
+      servers:
+        - host: memcached

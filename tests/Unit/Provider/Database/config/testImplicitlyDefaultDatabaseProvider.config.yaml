@@ -1,0 +1,10 @@
+doctrine:
+  dbal:
+    driver: pdo_mysql
+    host: mysql
+    user: user
+    password: password
+    dbname: database
+
+circuit_breaker:
+  provider: database

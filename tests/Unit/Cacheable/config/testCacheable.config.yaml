@@ -1,0 +1,18 @@
+framework:
+  cache:
+    pools:
+      circuit_breaker.pool:
+        adapter: cache.adapter.filesystem
+
+circuit_breaker:
+  provider: memory
+  cache_pool: circuit_breaker.pool
+
+  configurations:
+    api:
+      retries: 2
+      closed_threshold: 5
+      half_open_threshold: 10
+      retry_interval: 3000
+      open_timeout: 120
+      fallback_or_null: true

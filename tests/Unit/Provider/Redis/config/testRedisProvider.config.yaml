@@ -1,0 +1,6 @@
+circuit_breaker:
+  provider: redis
+
+  connections:
+    redis:
+      host: redis

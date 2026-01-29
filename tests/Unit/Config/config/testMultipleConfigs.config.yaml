@@ -1,0 +1,17 @@
+circuit_breaker:
+  provider: memory
+  configurations:
+    default:
+      retries: 3
+      closed_threshold: 3
+      half_open_threshold: 3
+      retry_interval: 1000
+      open_timeout: 60
+      fallback_or_null: false
+    api:
+      retries: 2
+      closed_threshold: 5
+      half_open_threshold: 10
+      retry_interval: 3000
+      open_timeout: 120
+      fallback_or_null: true
