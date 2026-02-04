@@ -29,7 +29,9 @@ composer require syastrebov/circuit-breaker-bundle
 
 ## Config
 
-### Database provider
+### Supported Providers
+
+#### Database
 
 config/packages/doctrine.yaml
 
@@ -59,7 +61,7 @@ circuit_breaker:
       connection: secondary
 ~~~
 
-### Memcached provider
+#### Memcached
 
 config/packages/circuit_breaker.yaml
 
@@ -76,7 +78,7 @@ circuit_breaker:
           port: 11211
 ~~~
 
-### Redis provider
+#### Redis
 
 ~~~yaml
 circuit_breaker:
@@ -89,7 +91,7 @@ circuit_breaker:
       password: password
 ~~~
 
-### Redis cluster provider
+#### Redis Cluster
 
 config/packages/circuit_breaker.yaml
 
@@ -108,7 +110,7 @@ circuit_breaker:
       password: password
 ~~~
 
-### Memory provider
+#### Memory provider
 
 config/packages/circuit_breaker.yaml
 
@@ -117,7 +119,7 @@ circuit_breaker:
   driver: memory
 ~~~
 
-### Configurations
+### Multiple Instances
 
 config/packages/circuit_breaker.yaml
 
@@ -159,6 +161,13 @@ public function requestApi(
 {
     // handle request
 }
+~~~
+
+### Logger
+
+~~~yaml
+circuit_breaker:
+  logger: monolog.logger.circuit_breaker
 ~~~
 
 ## Usage
