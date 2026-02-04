@@ -32,11 +32,6 @@ class KernelTestCase extends \Symfony\Bundle\FrameworkBundle\Test\KernelTestCase
         return $this->getPrivateProperty($circuitBreaker, 'provider');
     }
 
-    protected function getConfig(CircuitBreaker $circuitBreaker): CircuitBreakerConfig
-    {
-        return $this->getPrivateProperty($circuitBreaker, 'config');
-    }
-
     protected function getPrivateProperty(object $object, string $property): mixed
     {
         $reflectedClass = new \ReflectionClass($object);

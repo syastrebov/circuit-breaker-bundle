@@ -22,8 +22,7 @@ class ConfigTest extends KernelTestCase
         $circuitBreaker = $container->get('circuit_breaker.default');
         $this->assertInstanceOf(CircuitBreaker::class, $circuitBreaker);
 
-        $config = $this->getConfig($circuitBreaker);
-        $this->assertInstanceOf(CircuitBreakerConfig::class, $config);
+        $config = $circuitBreaker->getConfig();
 
         $this->assertEquals(3, $config->retries);
         $this->assertEquals(3, $config->closedThreshold);
@@ -42,8 +41,7 @@ class ConfigTest extends KernelTestCase
         $circuitBreaker = $kernel->getContainer()->get('circuit_breaker.default');
         $this->assertInstanceOf(CircuitBreaker::class, $circuitBreaker);
 
-        $config = $this->getConfig($circuitBreaker);
-        $this->assertInstanceOf(CircuitBreakerConfig::class, $config);
+        $config = $circuitBreaker->getConfig();
 
         $this->assertEquals(3, $config->retries);
         $this->assertEquals(3, $config->closedThreshold);
@@ -62,8 +60,7 @@ class ConfigTest extends KernelTestCase
         $circuitBreaker = $kernel->getContainer()->get('circuit_breaker.api');
         $this->assertInstanceOf(CircuitBreaker::class, $circuitBreaker);
 
-        $config = $this->getConfig($circuitBreaker);
-        $this->assertInstanceOf(CircuitBreakerConfig::class, $config);
+        $config = $circuitBreaker->getConfig();
 
         $this->assertEquals(2, $config->retries);
         $this->assertEquals(5, $config->closedThreshold);
@@ -82,8 +79,7 @@ class ConfigTest extends KernelTestCase
         $defaultCircuitBreaker = $kernel->getContainer()->get('circuit_breaker.default');
         $this->assertInstanceOf(CircuitBreaker::class, $defaultCircuitBreaker);
 
-        $config = $this->getConfig($defaultCircuitBreaker);
-        $this->assertInstanceOf(CircuitBreakerConfig::class, $config);
+        $config = $defaultCircuitBreaker->getConfig();
 
         $this->assertEquals(3, $config->retries);
         $this->assertEquals(3, $config->closedThreshold);
@@ -95,8 +91,7 @@ class ConfigTest extends KernelTestCase
         $apiCircuitBreaker = $kernel->getContainer()->get('circuit_breaker.api');
         $this->assertInstanceOf(CircuitBreaker::class, $apiCircuitBreaker);
 
-        $config = $this->getConfig($apiCircuitBreaker);
-        $this->assertInstanceOf(CircuitBreakerConfig::class, $config);
+        $config = $apiCircuitBreaker->getConfig();
 
         $this->assertEquals(2, $config->retries);
         $this->assertEquals(5, $config->closedThreshold);
