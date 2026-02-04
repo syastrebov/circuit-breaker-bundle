@@ -159,13 +159,13 @@ class CircuitBreakerBundle extends AbstractBundle
             /** @var array<string, string> $connections */
             $connections = $builder->getParameter('doctrine.connections');
             foreach (array_keys($connections) as $connection) {
-                $definition->tag('doctrine.dbal.schema_filter', [
-                    'connection' => $connection,
-                ]);
-                $definition->tag('kernel.event_listener', [
-                    'event' => 'console.command',
-                    'method' => 'onConsoleCommand',
-                ]);
+                $definition
+                    ->tag('doctrine.dbal.schema_filter', [
+                        'connection' => $connection,
+                    ])->tag('kernel.event_listener', [
+                        'event' => 'console.command',
+                        'method' => 'onConsoleCommand',
+                    ]);
             }
         }
     }
