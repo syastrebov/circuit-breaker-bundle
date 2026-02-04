@@ -4,6 +4,7 @@ namespace CircuitBreakerBundle;
 
 use CircuitBreaker\CircuitBreaker;
 use CircuitBreaker\CircuitBreakerConfig;
+use CircuitBreaker\Contracts\CircuitBreakerInterface;
 use CircuitBreaker\Providers\DatabaseProvider;
 use CircuitBreaker\Providers\MemcachedProvider;
 use CircuitBreaker\Providers\MemoryProvider;
@@ -135,6 +136,14 @@ class CircuitBreakerBundle extends AbstractBundle
                     ])
                     ->public();
             }
+        }
+
+        if (count($config['configurations']) > 0) {
+            $default = isset($config['configurations']['default'])
+                ? 'default'
+                : array_keys($config['configurations'])[0];
+
+            $container->services()->alias(CircuitBreakerInterface::class, "circuit_breaker.$default");
         }
     }
 
