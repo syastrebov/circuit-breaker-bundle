@@ -8,11 +8,12 @@ use CircuitBreaker\Exceptions\UnableToProcessException;
 use CircuitBreaker\Providers\RedisProvider;
 use Nyholm\BundleTest\TestKernel;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Tests\KernelTestCase;
 
-class RedisTest extends RedisTestCase
+class RedisTest extends KernelTestCase
 {
     #[DataProvider('credentialsProvider')]
-    public function testRedisWithCredentials(string $name): void
+    public function testRedisCredentials(string $name, string $driverClass): void
     {
         $kernel = self::bootKernel(['config' => static function (TestKernel $kernel) use ($name) {
             $kernel->addTestConfig(__DIR__ . "/config/$name.config.yaml");
@@ -28,7 +29,7 @@ class RedisTest extends RedisTestCase
 
         $provider = $this->getProvider($circuitBreaker);
         $this->assertInstanceOf(RedisProvider::class, $provider);
-        $this->assertInstanceOf(\Redis::class, $this->getRedisClient($provider));
+        $this->assertInstanceOf($driverClass, $this->getRedisClient($provider));
 
         $this->expectException(UnableToProcessException::class);
 
@@ -43,9 +44,16 @@ class RedisTest extends RedisTestCase
     public static function credentialsProvider(): array
     {
         return [
-            ['testRedisProviderWithUsernameAndPassword'],
-            ['testRedisProviderWithOnlyPassword'],
-            ['testRedisProviderNoPassword'],
+            ['testRedisProviderWithUsernameAndPassword', \Redis::class],
+            ['testRedisProviderWithOnlyPassword', \Redis::class],
+            ['testRedisProviderNoPassword', \Redis::class],
+            ['testRedisClusterProviderWithPassword', \RedisCluster::class],
+            ['testRedisClusterProviderNoPassword', \RedisCluster::class],
         ];
+    }
+
+    protected function getRedisClient(RedisProvider $provider): mixed
+    {
+        return $this->getPrivateProperty($provider, 'redis');
     }
 }
