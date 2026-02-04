@@ -42,7 +42,7 @@ class RedisFactory
         }
 
         if (!empty($config['password'])) {
-            if (isset($config['username']) && $config['username'] !== '' && is_string($config['password'])) {
+            if (!empty($config['username'])) {
                 $redis->auth([$config['username'], $config['password']]);
             } else {
                 $redis->auth($config['password']);

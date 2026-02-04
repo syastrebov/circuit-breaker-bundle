@@ -1,12 +1,50 @@
 services:
+  redis-auth:
+    image: redis:7-alpine
+    command: >
+      sh -c "
+      echo '
+        user myuser on allkeys allchannels allcommands >mypassword
+        user default on allkeys allchannels allcommands >password
+      ' > /tmp/users.acl &&
+      redis-server --aclfile /tmp/users.acl"
+    networks:
+      - default
+
   redis:
     image: redis:7-alpine
     networks:
       - default
 
+  redis-auth-node-1: &redis-template
+    image: redis:7-alpine
+    command: >
+      redis-server 
+      --cluster-enabled yes 
+      --cluster-config-file nodes.conf 
+      --cluster-node-timeout 5000 
+      --appendonly yes 
+      --port 6379 
+      --bind 0.0.0.0 
+      --protected-mode no
+      --requirepass "password"
+    networks:
+      - default
+
+  redis-auth-node-2: *redis-template
+  redis-auth-node-3: *redis-template
+
   redis-node-1: &redis-template
     image: redis:7-alpine
-    command: redis-server --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes --port 6379 --bind 0.0.0.0 --protected-mode no
+    command: >
+      redis-server 
+      --cluster-enabled yes 
+      --cluster-config-file nodes.conf 
+      --cluster-node-timeout 5000 
+      --appendonly yes 
+      --port 6379 
+      --bind 0.0.0.0 
+      --protected-mode no
     networks:
       - default
 
@@ -29,7 +67,6 @@ services:
       - default
 
   php:
-    container_name: symfony-circuit-breaker-php
     build:
       context: .
       dockerfile: ./docker/php/Dockerfile
@@ -37,6 +74,13 @@ services:
       - ./:/var/www
     depends_on:
       - redis
+      - redis-auth
+      - redis-node-1
+      - redis-node-2
+      - redis-node-3
+      - redis-auth-node-1
+      - redis-auth-node-2
+      - redis-auth-node-3
       - memcached
       - mysql
     stdin_open: true
