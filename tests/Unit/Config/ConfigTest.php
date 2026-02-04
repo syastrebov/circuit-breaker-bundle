@@ -3,8 +3,8 @@
 namespace Tests\Unit\Config;
 
 use CircuitBreaker\CircuitBreaker;
-use CircuitBreaker\CircuitBreakerConfig;
 use Nyholm\BundleTest\TestKernel;
+use Symfony\Component\HttpKernel\KernelInterface;
 use Tests\KernelTestCase;
 
 class ConfigTest extends KernelTestCase
@@ -15,21 +15,7 @@ class ConfigTest extends KernelTestCase
             $kernel->addTestConfig(__DIR__ . '/config/testEmptyConfig.config.yaml');
         }]);
 
-        $container = $kernel->getContainer();
-
-        $this->assertTrue($container->has('circuit_breaker.default'));
-
-        $circuitBreaker = $container->get('circuit_breaker.default');
-        $this->assertInstanceOf(CircuitBreaker::class, $circuitBreaker);
-
-        $config = $circuitBreaker->getConfig();
-
-        $this->assertEquals(3, $config->retries);
-        $this->assertEquals(3, $config->closedThreshold);
-        $this->assertEquals(3, $config->halfOpenThreshold);
-        $this->assertEquals(1000, $config->retryInterval);
-        $this->assertEquals(60, $config->openTimeout);
-        $this->assertFalse($config->fallbackOrNull);
+        $this->assertConfig($kernel, 'default', 3, 3, 3, 1000, 60, false);
     }
 
     public function testDefaultConfig(): void
@@ -38,17 +24,7 @@ class ConfigTest extends KernelTestCase
             $kernel->addTestConfig(__DIR__ . '/config/testDefaultConfig.config.yaml');
         }]);
 
-        $circuitBreaker = $kernel->getContainer()->get('circuit_breaker.default');
-        $this->assertInstanceOf(CircuitBreaker::class, $circuitBreaker);
-
-        $config = $circuitBreaker->getConfig();
-
-        $this->assertEquals(3, $config->retries);
-        $this->assertEquals(3, $config->closedThreshold);
-        $this->assertEquals(3, $config->halfOpenThreshold);
-        $this->assertEquals(1000, $config->retryInterval);
-        $this->assertEquals(60, $config->openTimeout);
-        $this->assertFalse($config->fallbackOrNull);
+        $this->assertConfig($kernel, 'default', 3, 3, 3, 1000, 60, false);
     }
 
     public function testCustomConfig(): void
@@ -57,17 +33,7 @@ class ConfigTest extends KernelTestCase
             $kernel->addTestConfig(__DIR__ . '/config/testCustomConfig.config.yaml');
         }]);
 
-        $circuitBreaker = $kernel->getContainer()->get('circuit_breaker.api');
-        $this->assertInstanceOf(CircuitBreaker::class, $circuitBreaker);
-
-        $config = $circuitBreaker->getConfig();
-
-        $this->assertEquals(2, $config->retries);
-        $this->assertEquals(5, $config->closedThreshold);
-        $this->assertEquals(10, $config->halfOpenThreshold);
-        $this->assertEquals(3000, $config->retryInterval);
-        $this->assertEquals(120, $config->openTimeout);
-        $this->assertTrue($config->fallbackOrNull);
+        $this->assertConfig($kernel, 'api', 2, 5, 10, 3000, 120, true);
     }
 
     public function testMultipleConfigs(): void
@@ -76,28 +42,32 @@ class ConfigTest extends KernelTestCase
             $kernel->addTestConfig(__DIR__ . '/config/testMultipleConfigs.config.yaml');
         }]);
 
-        $defaultCircuitBreaker = $kernel->getContainer()->get('circuit_breaker.default');
-        $this->assertInstanceOf(CircuitBreaker::class, $defaultCircuitBreaker);
+        $this->assertConfig($kernel, 'default', 3, 3, 3, 1000, 60, false);
 
-        $config = $defaultCircuitBreaker->getConfig();
+        $this->assertConfig($kernel, 'api', 2, 5, 10, 3000, 120, true);
+    }
 
-        $this->assertEquals(3, $config->retries);
-        $this->assertEquals(3, $config->closedThreshold);
-        $this->assertEquals(3, $config->halfOpenThreshold);
-        $this->assertEquals(1000, $config->retryInterval);
-        $this->assertEquals(60, $config->openTimeout);
-        $this->assertFalse($config->fallbackOrNull);
+    private function assertConfig(
+        KernelInterface $kernel,
+        string $prefix,
+        int $retries,
+        int $closedThreshold,
+        int $halfOpenThreshold,
+        int $retryInterval,
+        int $openTimeout,
+        bool $fallbackOrNull,
+    ): void {
+        $circuit = $kernel->getContainer()->get("circuit_breaker.$prefix");
+        $this->assertInstanceOf(CircuitBreaker::class, $circuit);
 
-        $apiCircuitBreaker = $kernel->getContainer()->get('circuit_breaker.api');
-        $this->assertInstanceOf(CircuitBreaker::class, $apiCircuitBreaker);
+        $config = $circuit->getConfig();
 
-        $config = $apiCircuitBreaker->getConfig();
-
-        $this->assertEquals(2, $config->retries);
-        $this->assertEquals(5, $config->closedThreshold);
-        $this->assertEquals(10, $config->halfOpenThreshold);
-        $this->assertEquals(3000, $config->retryInterval);
-        $this->assertEquals(120, $config->openTimeout);
-        $this->assertTrue($config->fallbackOrNull);
+        $this->assertEquals($prefix, $config->prefix);
+        $this->assertEquals($retries, $config->retries);
+        $this->assertEquals($closedThreshold, $config->closedThreshold);
+        $this->assertEquals($halfOpenThreshold, $config->halfOpenThreshold);
+        $this->assertEquals($retryInterval, $config->retryInterval);
+        $this->assertEquals($openTimeout, $config->openTimeout);
+        $this->assertEquals($fallbackOrNull, $config->fallbackOrNull);
     }
 }
