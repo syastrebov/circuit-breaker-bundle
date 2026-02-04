@@ -3,18 +3,14 @@
 namespace Tests\Unit\Cacheable;
 
 use CircuitBreakerBundle\CacheableCircuitBreaker;
-use Nyholm\BundleTest\TestKernel;
 use Tests\KernelTestCase;
 
 class CacheableCircuitBreakerTest extends KernelTestCase
 {
     public function testCacheable(): void
     {
-        $kernel = self::bootKernel(['config' => static function (TestKernel $kernel) {
-            $kernel->addTestConfig(__DIR__ . '/config/testCacheable.config.yaml');
-        }]);
-
         $name = __CLASS__ . __METHOD__;
+        $kernel = $this->bootKernelFromConfig(__DIR__, 'testCacheable');
         $container = $kernel->getContainer();
 
         $circuit = $container->get('circuit_breaker.api.cacheable');

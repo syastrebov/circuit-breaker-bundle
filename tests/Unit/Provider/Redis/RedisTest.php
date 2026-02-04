@@ -6,7 +6,6 @@ use CircuitBreaker\CircuitBreaker;
 use CircuitBreaker\Enums\CircuitBreakerState;
 use CircuitBreaker\Exceptions\UnableToProcessException;
 use CircuitBreaker\Providers\RedisProvider;
-use Nyholm\BundleTest\TestKernel;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\KernelTestCase;
 
@@ -15,10 +14,7 @@ class RedisTest extends KernelTestCase
     #[DataProvider('credentialsProvider')]
     public function testRedisCredentials(string $name, string $driverClass): void
     {
-        $kernel = self::bootKernel(['config' => static function (TestKernel $kernel) use ($name) {
-            $kernel->addTestConfig(__DIR__ . "/config/$name.config.yaml");
-        }]);
-
+        $kernel = $this->bootKernelFromConfig(__DIR__, $name);
         $container = $kernel->getContainer();
 
         $this->assertTrue($container->has('circuit_breaker.provider'));

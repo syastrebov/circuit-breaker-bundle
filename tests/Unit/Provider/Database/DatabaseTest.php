@@ -4,17 +4,13 @@ namespace Tests\Unit\Provider\Database;
 
 use CircuitBreaker\CircuitBreaker;
 use CircuitBreaker\Providers\DatabaseProvider;
-use Nyholm\BundleTest\TestKernel;
 use Tests\KernelTestCase;
 
 class DatabaseTest extends KernelTestCase
 {
     public function testImplicitlyDefaultDatabaseProvider(): void
     {
-        $kernel = self::bootKernel(['config' => static function (TestKernel $kernel) {
-            $kernel->addTestConfig(__DIR__ . '/config/testImplicitlyDefaultDatabaseProvider.config.yaml');
-        }]);
-
+        $kernel = $this->bootKernelFromConfig(__DIR__, 'testImplicitlyDefaultDatabaseProvider');
         $container = $kernel->getContainer();
 
         $this->assertTrue($container->has('circuit_breaker.provider'));
@@ -29,10 +25,7 @@ class DatabaseTest extends KernelTestCase
 
     public function testDatabaseProviderPrimaryConnection(): void
     {
-        $kernel = self::bootKernel(['config' => static function (TestKernel $kernel) {
-            $kernel->addTestConfig(__DIR__ . '/config/testDatabaseProviderPrimaryConnection.config.yaml');
-        }]);
-
+        $kernel = $this->bootKernelFromConfig(__DIR__, 'testDatabaseProviderPrimaryConnection');
         $container = $kernel->getContainer();
 
         $circuitBreaker = $container->get('circuit_breaker.default');
@@ -47,10 +40,7 @@ class DatabaseTest extends KernelTestCase
 
     public function testDatabaseProviderSecondaryConnection(): void
     {
-        $kernel = self::bootKernel(['config' => static function (TestKernel $kernel) {
-            $kernel->addTestConfig(__DIR__ . '/config/testDatabaseProviderSecondaryConnection.config.yaml');
-        }]);
-
+        $kernel = $this->bootKernelFromConfig(__DIR__, 'testDatabaseProviderSecondaryConnection');
         $container = $kernel->getContainer();
 
         $circuitBreaker = $container->get('circuit_breaker.default');

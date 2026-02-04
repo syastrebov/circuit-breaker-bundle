@@ -4,17 +4,13 @@ namespace Tests\Unit\Provider\Memcached;
 
 use CircuitBreaker\CircuitBreaker;
 use CircuitBreaker\Providers\MemcachedProvider;
-use Nyholm\BundleTest\TestKernel;
 use Tests\KernelTestCase;
 
 class MemcachedTest extends KernelTestCase
 {
     public function testMemcachedProvider(): void
     {
-        $kernel = self::bootKernel(['config' => static function (TestKernel $kernel) {
-            $kernel->addTestConfig(__DIR__ . '/config/testMemcachedProvider.config.yaml');
-        }]);
-
+        $kernel = $this->bootKernelFromConfig(__DIR__, 'testMemcachedProvider');
         $container = $kernel->getContainer();
 
         $this->assertTrue($container->has('circuit_breaker.provider'));

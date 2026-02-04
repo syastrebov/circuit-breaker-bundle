@@ -3,7 +3,6 @@
 namespace Tests;
 
 use CircuitBreaker\CircuitBreaker;
-use CircuitBreaker\CircuitBreakerConfig;
 use CircuitBreaker\Providers\ProviderInterface;
 use CircuitBreakerBundle\CircuitBreakerBundle;
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
@@ -25,6 +24,13 @@ class KernelTestCase extends \Symfony\Bundle\FrameworkBundle\Test\KernelTestCase
         $kernel->handleOptions($options);
 
         return $kernel;
+    }
+
+    protected function bootKernelFromConfig(string $dir, string $name): KernelInterface
+    {
+        return self::bootKernel(['config' => static function (TestKernel $kernel) use ($dir, $name) {
+            $kernel->addTestConfig("$dir/config/$name.config.yaml");
+        }]);
     }
 
     protected function getProvider(CircuitBreaker $circuitBreaker): ProviderInterface

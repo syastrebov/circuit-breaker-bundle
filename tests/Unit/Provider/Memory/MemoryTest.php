@@ -4,17 +4,13 @@ namespace Tests\Unit\Provider\Memory;
 
 use CircuitBreaker\CircuitBreaker;
 use CircuitBreaker\Providers\MemoryProvider;
-use Nyholm\BundleTest\TestKernel;
 use Tests\KernelTestCase;
 
 class MemoryTest extends KernelTestCase
 {
     public function testMemoryProvider(): void
     {
-        $kernel = self::bootKernel(['config' => static function (TestKernel $kernel) {
-            $kernel->addTestConfig(__DIR__ . '/config/testMemoryProvider.config.yaml');
-        }]);
-
+        $kernel = $this->bootKernelFromConfig(__DIR__, 'testMemoryProvider');
         $container = $kernel->getContainer();
 
         $this->assertTrue($container->has('circuit_breaker.provider'));
