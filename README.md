@@ -4,7 +4,7 @@ Symfony package for https://github.com/syastrebov/circuit-breaker.
 
 ## Install
 
-Add to your composer.json
+If you're using flex add to your composer.json
 
 ~~~json
 {
@@ -21,7 +21,7 @@ Add to your composer.json
 }
 ~~~
 
-And then install via composer
+Install via composer
 
 ~~~bash
 composer require syastrebov/circuit-breaker-bundle
