@@ -6,7 +6,7 @@ use CircuitBreaker\CircuitBreaker;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Tests\KernelTestCase;
 
-class ConfigTest extends KernelTestCase
+final class ConfigTest extends KernelTestCase
 {
     public function testEmptyConfig(): void
     {

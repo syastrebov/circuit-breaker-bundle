@@ -10,7 +10,7 @@ use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
 
-class CircuitBreakerBundleConfigTest extends TestCase
+final class CircuitBreakerBundleConfigTest extends TestCase
 {
     #[DataProvider('providers')]
     public function testDriverConfiguration(string $value, Provider $enum): void

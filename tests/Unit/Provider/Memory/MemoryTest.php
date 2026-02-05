@@ -6,7 +6,7 @@ use CircuitBreaker\CircuitBreaker;
 use CircuitBreaker\Providers\MemoryProvider;
 use Tests\KernelTestCase;
 
-class MemoryTest extends KernelTestCase
+final class MemoryTest extends KernelTestCase
 {
     public function testMemoryProvider(): void
     {

@@ -9,7 +9,7 @@ use CircuitBreaker\Providers\RedisProvider;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\KernelTestCase;
 
-class RedisTest extends KernelTestCase
+final class RedisTest extends KernelTestCase
 {
     #[DataProvider('credentialsProvider')]
     public function testRedisCredentials(string $name, string $driverClass): void

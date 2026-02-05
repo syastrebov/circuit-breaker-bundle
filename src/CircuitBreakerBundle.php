@@ -22,13 +22,15 @@ use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigura
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 
-class CircuitBreakerBundle extends AbstractBundle
+final class CircuitBreakerBundle extends AbstractBundle
 {
+    #[\Override]
     public function configure(DefinitionConfigurator $definition): void
     {
         Configuration::configure($definition);
     }
 
+    #[\Override]
     public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
     {
         // if no configurations defined use default one
@@ -45,9 +47,14 @@ class CircuitBreakerBundle extends AbstractBundle
 
     private function loadProvider(array $config, ContainerConfigurator $container): void
     {
+        $provider = $config['provider'];
+        if (!$provider instanceof Provider) {
+            throw new \InvalidArgumentException('Provider must be instance of CircuitBreaker\\Provider');
+        }
+
         $definition = $container
             ->services()
-            ->set('circuit_breaker.provider', match ($config['provider']) {
+            ->set('circuit_breaker.provider', match ($provider) {
                 Provider::Redis => RedisProvider::class,
                 Provider::Memcached => MemcachedProvider::class,
                 Provider::Database => DatabaseProvider::class,
@@ -55,7 +62,7 @@ class CircuitBreakerBundle extends AbstractBundle
             })
             ->public();
 
-        switch ($config['provider']) {
+        switch ($provider) {
             case Provider::Redis:
                 $redisDefinition = (new Definition())
                     ->setFactory([RedisFactory::class, 'create'])
@@ -85,6 +92,9 @@ class CircuitBreakerBundle extends AbstractBundle
                 $definition->args([$pdoDefinition, $table]);
 
                 break;
+            case Provider::Memory:
+                // no arguments
+                break;
         }
 
         $container->services()->alias(ProviderInterface::class, 'circuit_breaker.provider');
@@ -98,6 +108,7 @@ class CircuitBreakerBundle extends AbstractBundle
 
     private function loadConfigurations(array $config, ContainerConfigurator $container): void
     {
+        /** @var array $config */
         foreach ($config['configurations'] as $name => $config) {
             $container
                 ->services()
@@ -112,9 +123,11 @@ class CircuitBreakerBundle extends AbstractBundle
 
     private function loadServices(array $config, ContainerConfigurator $container): void
     {
-        $cachePool = $config['cache_pool'] ?? null;
+        $cachePool = (string) ($config['cache_pool'] ?? null);
 
-        foreach (array_keys($config['configurations']) as $name) {
+        /** @var string[] $configurations */
+        $configurations = array_keys($config['configurations']);
+        foreach ($configurations as $name) {
             $container
                 ->services()
                 ->set("circuit_breaker.$name", CircuitBreaker::class)
@@ -138,11 +151,8 @@ class CircuitBreakerBundle extends AbstractBundle
             }
         }
 
-        if (count($config['configurations']) > 0) {
-            $default = isset($config['configurations']['default'])
-                ? 'default'
-                : array_keys($config['configurations'])[0];
-
+        if (count($configurations) > 0) {
+            $default = in_array('default', $configurations) ? 'default' : $configurations[0];
             $container->services()->alias(CircuitBreakerInterface::class, "circuit_breaker.$default");
         }
     }

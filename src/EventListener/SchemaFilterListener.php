@@ -25,6 +25,8 @@ final class SchemaFilterListener
         }
 
         if ($asset instanceof AbstractAsset) {
+            /** @psalm-suppress DeprecatedMethod */
+            /** @psalm-suppress InternalMethod */
             $asset = $asset instanceof AbstractNamedObject
                 ? $asset->getObjectName()->toString()
                 : $asset->getName();

@@ -6,7 +6,7 @@ use CircuitBreaker\CircuitBreaker;
 use CircuitBreaker\Providers\MemcachedProvider;
 use Tests\KernelTestCase;
 
-class MemcachedTest extends KernelTestCase
+final class MemcachedTest extends KernelTestCase
 {
     public function testMemcachedProvider(): void
     {

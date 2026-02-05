@@ -2,10 +2,14 @@
 
 namespace CircuitBreakerBundle\Provider;
 
-class RedisFactory
+final class RedisFactory
 {
     public static function create(array $config): \Redis|\RedisCluster
     {
+        if (!extension_loaded('redis')) {
+            throw new \RuntimeException('Redis extension is not loaded.');
+        }
+
         return !empty($config['nodes'])
             ? self::createCluster($config)
             : self::createSingle($config);
@@ -14,25 +18,28 @@ class RedisFactory
     public static function createSingle(array $config): \Redis
     {
         $redis = new \Redis();
-        $persistent = $config['persistent'] ?? false;
+        $persistent = (bool) ($config['persistent'] ?? false);
 
         $parameters = [
-            $config['host'],
+            $config['host'] ?? '127.0.0.1',
             $config['port'] ?? 6379,
             $config['timeout'] ?? 0.0,
             $persistent ? $config['persistent_id'] ?? null : null,
             $config['retry_interval'] ?? 0,
         ];
 
-        if (version_compare(phpversion('redis'), '3.1.3', '>=')) {
-            $parameters[] = $config['read_timeout'] ?? 0.0;
-        }
+        $version = (string) phpversion('redis');
+        if ($version) {
+            if (version_compare($version, '3.1.3', '>=')) {
+                $parameters[] = $config['read_timeout'] ?? 0.0;
+            }
 
-        if (
-            version_compare(phpversion('redis'), '5.3.0', '>=')
-            && !is_null($context = $config['context'] ?? null)
-        ) {
-            $parameters[] = $context;
+            if (
+                version_compare($version, '5.3.0', '>=')
+                && !is_null($context = $config['context'] ?? null)
+            ) {
+                $parameters[] = $context;
+            }
         }
 
         $redis->{$persistent ? 'pconnect' : 'connect'}(...$parameters);
@@ -41,11 +48,16 @@ class RedisFactory
             $redis->setOption(\Redis::OPT_MAX_RETRIES, $config['max_retries']);
         }
 
-        if (!empty($config['password'])) {
-            if (!empty($config['username'])) {
-                $redis->auth([$config['username'], $config['password']]);
+        $username = (string) ($config['username'] ?? null);
+        $password = (string) ($config['password'] ?? null);
+
+        if ($password) {
+            if ($username) {
+                /** @psalm-suppress InvalidCast */
+                /** @psalm-suppress InvalidArgument */
+                $redis->auth([$username, $password]);
             } else {
-                $redis->auth($config['password']);
+                $redis->auth($password);
             }
         }
 
@@ -69,7 +81,7 @@ class RedisFactory
         $parameters = [
             null,
             array_map(
-                fn (array $node) => $node['host'] . ':' . $node['port'] ?? 6379,
+                fn (array $node) => $node['host'] . ':' . ($node['port'] ?? 6379),
                 $config['nodes'] ?? []
             ),
             $config['timeout'] ?? 0,
@@ -77,7 +89,8 @@ class RedisFactory
             isset($config['persistent']) && $config['persistent'],
         ];
 
-        if (version_compare(phpversion('redis'), '4.3.0', '>=')) {
+        $version = (string)  phpversion('redis');
+        if ($version && version_compare($version, '4.3.0', '>=')) {
             $parameters[] = $config['password'] ?? null;
         }
 

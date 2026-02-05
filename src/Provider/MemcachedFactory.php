@@ -2,7 +2,7 @@
 
 namespace CircuitBreakerBundle\Provider;
 
-class MemcachedFactory
+final class MemcachedFactory
 {
     public static function create(array $servers): \Memcached
     {

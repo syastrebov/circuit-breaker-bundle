@@ -5,7 +5,7 @@ namespace Tests\Unit\Cacheable;
 use CircuitBreakerBundle\CacheableCircuitBreaker;
 use Tests\KernelTestCase;
 
-class CacheableCircuitBreakerTest extends KernelTestCase
+final class CacheableCircuitBreakerTest extends KernelTestCase
 {
     public function testCacheable(): void
     {

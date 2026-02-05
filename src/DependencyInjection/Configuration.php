@@ -49,7 +49,7 @@ final class Configuration
         $node = $builder->getRootNode();
         $node
             ->validate()
-                ->ifTrue(function ($v) {
+                ->ifTrue(function (array $v): bool {
                     return empty($v['host']) && empty($v['nodes']);
                 })
                 ->thenInvalid('You must set either "host" or "nodes".')

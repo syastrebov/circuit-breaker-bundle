@@ -6,7 +6,7 @@ use CircuitBreaker\CircuitBreaker;
 use CircuitBreaker\Providers\DatabaseProvider;
 use Tests\KernelTestCase;
 
-class DatabaseTest extends KernelTestCase
+final class DatabaseTest extends KernelTestCase
 {
     public function testImplicitlyDefaultDatabaseProvider(): void
     {
