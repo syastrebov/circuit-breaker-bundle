@@ -3,7 +3,7 @@
 namespace Tests;
 
 use CircuitBreaker\CircuitBreaker;
-use CircuitBreaker\Providers\ProviderInterface;
+use CircuitBreaker\Contracts\ProviderInterface;
 use CircuitBreakerBundle\CircuitBreakerBundle;
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
 use Nyholm\BundleTest\TestKernel;

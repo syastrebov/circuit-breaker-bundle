@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "928045b2dc6a0df93988997e2efd47ac",
+    "content-hash": "e69499f10397c57eee70706d719f2c45",
     "packages": [
         {
             "name": "guzzlehttp/guzzle",
@@ -690,16 +690,16 @@
         },
         {
             "name": "syastrebov/circuit-breaker",
-            "version": "v0.0.5",
+            "version": "v0.0.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/syastrebov/circuit-breaker.git",
-                "reference": "75b2325a510c914a6bc74c5f0f745998db8ccfd8"
+                "reference": "c52cdf4d1e7de2eecbfdae0f58099ba507141674"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/syastrebov/circuit-breaker/zipball/75b2325a510c914a6bc74c5f0f745998db8ccfd8",
-                "reference": "75b2325a510c914a6bc74c5f0f745998db8ccfd8",
+                "url": "https://api.github.com/repos/syastrebov/circuit-breaker/zipball/c52cdf4d1e7de2eecbfdae0f58099ba507141674",
+                "reference": "c52cdf4d1e7de2eecbfdae0f58099ba507141674",
                 "shasum": ""
             },
             "require": {
@@ -710,7 +710,8 @@
             "require-dev": {
                 "phpstan/phpstan": "^2.1",
                 "phpunit/phpunit": "^12.5",
-                "squizlabs/php_codesniffer": "^4.0"
+                "squizlabs/php_codesniffer": "^4.0",
+                "vimeo/psalm": "^6.15"
             },
             "type": "library",
             "autoload": {
@@ -732,9 +733,9 @@
             ],
             "description": "Circuit breaker wrapper for microservices and api calls.",
             "support": {
-                "source": "https://github.com/syastrebov/circuit-breaker/tree/v0.0.5"
+                "source": "https://github.com/syastrebov/circuit-breaker/tree/v0.0.6"
             },
-            "time": "2026-02-02T11:41:04+00:00"
+            "time": "2026-02-05T09:40:26+00:00"
         },
         {
             "name": "symfony/config",
