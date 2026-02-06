@@ -8,5 +8,6 @@
 /docker-compose.yaml export-ignore
 /phpunit.xml export-ignore
 /.phpunit.result.cache export-ignore
+/psalm.xml export-ignore
 /CHANGELOG.md export-ignore
 /README.md export-ignore
