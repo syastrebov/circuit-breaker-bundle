@@ -115,7 +115,7 @@ final class CircuitBreakerBundle extends AbstractBundle
         $default = in_array('default', $configurations) ? 'default' : $configurations[0];
 
         if (!empty($config['logger'])) {
-            $services->set('circuit_breaker.logger', service($config['logger']));
+            $services->alias('circuit_breaker.logger', $config['logger']);
         }
 
         foreach ($configurations as $name) {
