@@ -7,6 +7,7 @@ use CircuitBreaker\Contracts\ProviderInterface;
 use CircuitBreakerBundle\CircuitBreakerBundle;
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
 use Nyholm\BundleTest\TestKernel;
+use Symfony\Bundle\MonologBundle\MonologBundle;
 use Symfony\Component\HttpKernel\KernelInterface;
 
 class KernelTestCase extends \Symfony\Bundle\FrameworkBundle\Test\KernelTestCase
@@ -20,6 +21,7 @@ class KernelTestCase extends \Symfony\Bundle\FrameworkBundle\Test\KernelTestCase
     {
         $kernel = parent::createKernel($options);
         $kernel->addTestBundle(DoctrineBundle::class);
+        $kernel->addTestBundle(MonologBundle::class);
         $kernel->addTestBundle(CircuitBreakerBundle::class);
         $kernel->handleOptions($options);
 

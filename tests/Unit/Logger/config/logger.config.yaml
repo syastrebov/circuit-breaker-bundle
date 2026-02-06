@@ -1,0 +1,23 @@
+framework:
+  cache:
+    pools:
+      circuit_breaker.pool:
+        adapter: cache.adapter.filesystem
+
+monolog:
+  channels:
+    - circuit_breaker
+  handlers:
+    circuit_breaker:
+      type: test
+      level: info
+      channels: [ "circuit_breaker" ]
+
+circuit_breaker:
+  provider: memory
+  cache_pool: circuit_breaker.pool
+  logger: monolog.logger.circuit_breaker
+  configurations:
+    api:
+      retries: 2
+      closed_threshold: 3
