@@ -2,7 +2,7 @@
 
 namespace CircuitBreakerBundle\DependencyInjection;
 
-use CircuitBreakerBundle\Enums\Provider;
+use CircuitBreaker\Enums\Provider;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4a013b419a50f53c3aff45d9db86efd0",
+    "content-hash": "48d1ded002d0beb820df3e1a5a048562",
     "packages": [
         {
             "name": "psr/container",
@@ -161,16 +161,16 @@
         },
         {
             "name": "syastrebov/circuit-breaker",
-            "version": "v0.0.7",
+            "version": "v0.0.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/syastrebov/circuit-breaker.git",
-                "reference": "3ee72e13ad8218132c62f54c17e1c58db226ea4f"
+                "reference": "11f09aa2adba66fb9e06f0f80619f4d7f133f63f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/syastrebov/circuit-breaker/zipball/3ee72e13ad8218132c62f54c17e1c58db226ea4f",
-                "reference": "3ee72e13ad8218132c62f54c17e1c58db226ea4f",
+                "url": "https://api.github.com/repos/syastrebov/circuit-breaker/zipball/11f09aa2adba66fb9e06f0f80619f4d7f133f63f",
+                "reference": "11f09aa2adba66fb9e06f0f80619f4d7f133f63f",
                 "shasum": ""
             },
             "require": {
@@ -208,9 +208,9 @@
             ],
             "description": "Circuit breaker wrapper for microservices and api calls.",
             "support": {
-                "source": "https://github.com/syastrebov/circuit-breaker/tree/v0.0.7"
+                "source": "https://github.com/syastrebov/circuit-breaker/tree/v0.0.9"
             },
-            "time": "2026-02-05T19:44:21+00:00"
+            "time": "2026-02-06T14:32:27+00:00"
         },
         {
             "name": "symfony/config",

@@ -4,8 +4,8 @@ namespace CircuitBreakerBundle;
 
 use CircuitBreaker\CircuitBreaker;
 use CircuitBreaker\Contracts\CircuitBreakerInterface;
+use CircuitBreaker\Enums\Provider;
 use CircuitBreakerBundle\DependencyInjection\Configuration;
-use CircuitBreakerBundle\Enums\Provider;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;

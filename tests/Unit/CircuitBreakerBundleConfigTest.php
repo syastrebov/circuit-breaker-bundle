@@ -3,7 +3,7 @@
 namespace Tests\Unit;
 
 use CircuitBreakerBundle\CircuitBreakerBundle;
-use CircuitBreakerBundle\Enums\Provider;
+use CircuitBreaker\Enums\Provider;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Config\Definition\Processor;
