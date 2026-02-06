@@ -1,0 +1,15 @@
+framework:
+  cache:
+    pools:
+      circuit_breaker.pool:
+        adapter: cache.adapter.filesystem
+
+circuit_breaker:
+  provider: memory
+  cache_pool: circuit_breaker.pool
+
+  configurations:
+    api1:
+      retries: 2
+    api2:
+      retries: 3
