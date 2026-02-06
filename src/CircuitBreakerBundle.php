@@ -3,24 +3,19 @@
 namespace CircuitBreakerBundle;
 
 use CircuitBreaker\CircuitBreaker;
-use CircuitBreaker\CircuitBreakerConfig;
 use CircuitBreaker\Contracts\CircuitBreakerInterface;
-use CircuitBreaker\Contracts\ProviderInterface;
-use CircuitBreaker\Providers\DatabaseProvider;
-use CircuitBreaker\Providers\MemcachedProvider;
-use CircuitBreaker\Providers\MemoryProvider;
-use CircuitBreaker\Providers\RedisProvider;
 use CircuitBreakerBundle\DependencyInjection\Configuration;
 use CircuitBreakerBundle\Enums\Provider;
-use CircuitBreakerBundle\EventListener\SchemaFilterListener;
-use CircuitBreakerBundle\Provider\MemcachedFactory;
-use CircuitBreakerBundle\Provider\RedisFactory;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
+use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
-use Symfony\Component\DependencyInjection\Reference;
+use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
+use Predis\Client;
+
+use function Symfony\Component\DependencyInjection\Loader\Configurator\param;
+use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 
 final class CircuitBreakerBundle extends AbstractBundle
 {
@@ -39,71 +34,60 @@ final class CircuitBreakerBundle extends AbstractBundle
             $config['configurations']['default'] = [];
         }
 
+        $loader = new PhpFileLoader($builder, new FileLocator(__DIR__ . '/../config'));
+        $loader->load('services.php');
+
         $this->loadProvider($config, $container);
         $this->loadConfigurations($config, $container);
         $this->loadServices($config, $container);
-        $this->loadSchemaFilter($config, $container, $builder);
+        $this->loadSchemaFilter($container, $builder);
     }
 
     private function loadProvider(array $config, ContainerConfigurator $container): void
     {
+        /** @var Provider $provider */
         $provider = $config['provider'];
-        if (!$provider instanceof Provider) {
-            throw new \InvalidArgumentException('Provider must be instance of CircuitBreaker\\Provider');
-        }
+        $services = $container->services();
 
-        $definition = $container
-            ->services()
-            ->set('circuit_breaker.provider', match ($provider) {
-                Provider::Redis => RedisProvider::class,
-                Provider::Memcached => MemcachedProvider::class,
-                Provider::Database => DatabaseProvider::class,
-                Provider::Memory => MemoryProvider::class,
-            })
-            ->public();
+        $services->alias('circuit_breaker.provider', call_user_func(function () use ($provider): string {
+            $suffix = $provider->value;
+            if ($provider === Provider::Redis && !extension_loaded('redis')) {
+                if (class_exists(Client::class)) {
+                    $suffix = Provider::Predis->value;
+                } else {
+                    throw new \Exception('Redis is not installed.');
+                }
+            }
 
-        switch ($provider) {
-            case Provider::Redis:
-                $redisDefinition = (new Definition())
-                    ->setFactory([RedisFactory::class, 'create'])
-                    ->addArgument($config['connections']['redis'] ?? []);
+            return 'circuit_breaker.provider.' . $suffix;
+        }))->public();
 
-                $definition->args([$redisDefinition]);
+        // redis
+        $services->get('circuit_breaker.driver.redis_factory')->args([
+            $config['connections']['redis'] ?? [],
+        ]);
 
-                break;
-            case Provider::Memcached:
-                $memcachedDefinition = (new Definition())
-                    ->setFactory([MemcachedFactory::class, 'create'])
-                    ->setArguments([$config['connections']['memcached']['servers'] ?? []]);
+        $services->get('circuit_breaker.driver.predis_factory')->args([
+            $config['connections']['redis'] ?? [],
+        ]);
 
-                $definition->args([$memcachedDefinition]);
+        // memcached
+        $services->get('circuit_breaker.driver.memcached_factory')->args([
+            $config['connections']['memcached']['servers'] ?? [],
+        ]);
 
-                break;
-            case Provider::Database:
-                $connection = $config['connections']['database']['connection'] ?? 'default';
-                $table = $this->getDatabaseTableName($config);
+        // database
+        $connection = $config['connections']['database']['connection'] ?? 'default';
 
-                $pdoDefinition = (new Definition(\PDO::class))
-                    ->setFactory([
-                        new Reference("doctrine.dbal.{$connection}_connection"),
-                        'getNativeConnection'
-                    ]);
+        $container->parameters()->set(
+            'circuit_breaker.driver.database.table',
+            $config['connections']['database']['table'] ?? 'circuit_breaker'
+        );
 
-                $definition->args([$pdoDefinition, $table]);
-
-                break;
-            case Provider::Memory:
-                // no arguments
-                break;
-        }
-
-        $container->services()->alias(ProviderInterface::class, 'circuit_breaker.provider');
-        $container->parameters()->set('circuit_breaker.database.table', $this->getDatabaseTableName($config));
-    }
-
-    private function getDatabaseTableName(array $config): string
-    {
-        return $config['connections']['database']['table'] ?? 'circuit_breaker';
+        $services->get('circuit_breaker.driver.database')->factory([
+            service("doctrine.dbal.{$connection}_connection"),
+            'getNativeConnection'
+        ]);
     }
 
     private function loadConfigurations(array $config, ContainerConfigurator $container): void
@@ -112,8 +96,8 @@ final class CircuitBreakerBundle extends AbstractBundle
         foreach ($config['configurations'] as $name => $config) {
             $container
                 ->services()
-                ->set("circuit_breaker.$name.config", CircuitBreakerConfig::class)
-                ->factory([CircuitBreakerConfig::class, 'create'])
+                ->set("circuit_breaker.$name.config")
+                ->parent('circuit_breaker.config.abstract')
                 ->args([[
                     ...$config,
                     'prefix' => $name,
@@ -123,59 +107,64 @@ final class CircuitBreakerBundle extends AbstractBundle
 
     private function loadServices(array $config, ContainerConfigurator $container): void
     {
-        $cachePool = (string) ($config['cache_pool'] ?? null);
+        $services = $container->services();
 
         /** @var string[] $configurations */
         $configurations = array_keys($config['configurations']);
+        $cachePool = $config['cache_pool'] ?? null;
+        $default = in_array('default', $configurations) ? 'default' : $configurations[0];
+
+        if (!empty($config['logger'])) {
+            $services->set('circuit_breaker.logger', service($config['logger']));
+        }
+
         foreach ($configurations as $name) {
-            $container
-                ->services()
-                ->set("circuit_breaker.$name", CircuitBreaker::class)
-                ->args([
-                    new Reference(ProviderInterface::class),
-                    new Reference("circuit_breaker.$name.config"),
-                    !empty($config['logger']) ? new Reference($config['logger']) : null,
-                ])
-                ->public();
+            $services
+                ->set("circuit_breaker.$name")
+                ->parent('circuit_breaker.abstract')
+                ->arg('$config', service("circuit_breaker.$name.config"));
 
             if ($cachePool) {
-                $container
-                    ->services()
-                    ->set("circuit_breaker.$name.cacheable", CacheableCircuitBreaker::class)
-                    ->args([
-                        new Reference("circuit_breaker.$name"),
-                        new Reference($cachePool),
-                        !empty($config['logger']) ? new Reference($config['logger']) : null,
-                    ])
-                    ->public();
+                $services
+                    ->set("circuit_breaker.$name.cacheable")
+                    ->parent('circuit_breaker.cacheable.abstract')
+                    ->arg('$circuitBreaker', service("circuit_breaker.$name"))
+                    ->arg('$cache', service($cachePool));
             }
         }
 
-        if (count($configurations) > 0) {
-            $default = in_array('default', $configurations) ? 'default' : $configurations[0];
-            $container->services()->alias(CircuitBreakerInterface::class, "circuit_breaker.$default");
+        $services->alias('circuit_breaker', "circuit_breaker.$default")
+            ->public();
+        $services->alias(CircuitBreaker::class, "circuit_breaker.$default")
+            ->public();
+        $services->alias(CircuitBreakerInterface::class, "circuit_breaker.$default")
+            ->public();
+
+        if ($cachePool) {
+            $services->alias('circuit_breaker.cacheable', "circuit_breaker.$default.cacheable")
+                ->public();
+            $services->alias(CacheableCircuitBreaker::class, "circuit_breaker.$default.cacheable")
+                ->public();
         }
     }
 
-    private function loadSchemaFilter(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
+    private function loadSchemaFilter(ContainerConfigurator $container, ContainerBuilder $builder): void
     {
         // add filter to ignore this table
-        $definition = $container
-            ->services()
-            ->set('circuit_breaker.schema_filter_listener', SchemaFilterListener::class)
-            ->args([$this->getDatabaseTableName($config)]);
+        if ($builder->hasParameter('circuit_breaker.driver.database.table')) {
+            $definition = $container
+                ->services()
+                ->get('circuit_breaker.schema_filter_listener')
+                ->args([param('circuit_breaker.driver.database.table')]);
 
-        if ($builder->hasParameter('doctrine.connections')) {
-            /** @var array<string, string> $connections */
-            $connections = $builder->getParameter('doctrine.connections');
-            foreach (array_keys($connections) as $connection) {
-                $definition
-                    ->tag('doctrine.dbal.schema_filter', [
+            if ($builder->hasParameter('doctrine.connections')) {
+                /** @var array<string, string> $connections */
+                $connections = $builder->getParameter('doctrine.connections');
+                foreach (array_keys($connections) as $connection) {
+                    $definition->tag('doctrine.dbal.schema_filter', [
                         'connection' => $connection,
-                    ])->tag('kernel.event_listener', [
-                        'event' => 'console.command',
-                        'method' => 'onConsoleCommand',
                     ]);
+                }
             }
         }
     }

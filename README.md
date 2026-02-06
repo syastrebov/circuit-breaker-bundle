@@ -1,6 +1,6 @@
-PHP implementation of circuit breaker for microservices and api calls.
+PHP Circuit Breaker implementation for microservices and API calls.
 
-Symfony package for https://github.com/syastrebov/circuit-breaker.
+A Symfony bundle for the https://github.com/syastrebov/circuit-breaker library.
 
 ## Install
 
@@ -33,7 +33,7 @@ composer require syastrebov/circuit-breaker-bundle
 
 #### Database
 
-config/packages/doctrine.yaml
+`config/packages/doctrine.yaml`
 
 ~~~yaml
 doctrine:
@@ -51,7 +51,7 @@ doctrine:
         dbname: database
 ~~~
 
-config/packages/circuit_breaker.yaml
+`config/packages/circuit_breaker.yaml`
 
 ~~~yaml
 circuit_breaker:
@@ -63,7 +63,7 @@ circuit_breaker:
 
 #### Memcached
 
-config/packages/circuit_breaker.yaml
+`config/packages/circuit_breaker.yaml`
 
 ~~~yaml
 circuit_breaker:
@@ -80,6 +80,10 @@ circuit_breaker:
 
 #### Redis
 
+Uses `redis` extension or `predis` as fallback.
+
+`config/packages/circuit_breaker.yaml`
+
 ~~~yaml
 circuit_breaker:
   driver: redis
@@ -93,7 +97,9 @@ circuit_breaker:
 
 #### Redis Cluster
 
-config/packages/circuit_breaker.yaml
+Uses `redis` extension or `predis` as fallback.
+
+`config/packages/circuit_breaker.yaml`
 
 ~~~yaml
 circuit_breaker:
@@ -110,7 +116,18 @@ circuit_breaker:
       password: password
 ~~~
 
-#### Memory provider
+#### Predis
+
+To force Predis usage despite the redis extension being installed:
+
+`config/packages/circuit_breaker.yaml`
+
+~~~yaml
+circuit_breaker:
+  driver: predis
+~~~
+
+#### Memory
 
 config/packages/circuit_breaker.yaml
 
@@ -121,7 +138,7 @@ circuit_breaker:
 
 ### Multiple Instances
 
-config/packages/circuit_breaker.yaml
+`config/packages/circuit_breaker.yaml`
 
 ~~~yaml
 circuit_breaker:
@@ -149,16 +166,14 @@ use CircuitBreaker\Contracts\CircuitBreakerInterface;
 public function requestDefault(
     #[Autowire(service: 'circuit_breaker.default')] 
     CircuitBreakerInterface $circuit
-): string 
-{
+): string {
     // handle request
 }
 
 public function requestApi(
     #[Autowire(service: 'circuit_breaker.api')] 
     CircuitBreakerInterface $circuit
-): string 
-{
+): string {
     // handle request
 }
 ~~~
@@ -197,8 +212,7 @@ use CircuitBreaker\Contracts\CircuitBreakerInterface;
 public function request(
     #[Autowire(service: 'circuit_breaker.api')] 
     CircuitBreakerInterface $circuit
-): string 
-{
+): string {
     try {
         return $circuit->run('test', function () {
             return '{"response": "data"}';
@@ -217,8 +231,7 @@ use CircuitBreaker\Contracts\CircuitBreakerInterface;
 public function request(
     #[Autowire(service: 'circuit_breaker.api')] 
     CircuitBreakerInterface $circuit
-): string
-{
+): string {
     return $circuit->run(
         '{endpoint}',
         static function () {
@@ -275,8 +288,7 @@ use CircuitBreaker\Contracts\CircuitBreakerInterface;
 public function request(
     #[Autowire(service: 'circuit_breaker.api.cacheable')] 
     CircuitBreakerInterface $circuit
-): string
-{
+): string {
     return $circuit->run('{endpoint}', static function () {
         return (string) (new Client)->get('https://domain/api/{endpoint}')->getBody();
     });

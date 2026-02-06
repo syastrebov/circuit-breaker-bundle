@@ -2,13 +2,13 @@
 
 namespace CircuitBreakerBundle\Provider;
 
-final class MemcachedFactory
+final class MemcachedFactory extends AbstractFactory
 {
-    public static function create(array $servers): \Memcached
+    public function create(): \Memcached
     {
         $memcached = new \Memcached();
-        foreach ($servers as $server) {
-            $memcached->addServer($server['host'], $server['port'] ?? 11211);
+        foreach ($this->config['servers'] ?? [] as $server) {
+            $memcached->addServer($server['host'] ?? '127.0.0.1', $server['port'] ?? 11211);
         }
 
         return $memcached;

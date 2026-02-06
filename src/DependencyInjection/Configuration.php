@@ -77,6 +77,10 @@ final class Configuration
                 ->scalarNode('password')->end()
                 ->integerNode('database')->end()
                 ->scalarNode('prefix')->end()
+                ->variableNode('context')
+                    ->info('Arbitrary phpredis context (stream options, auth, etc.)')
+                    ->defaultValue([])
+                ->end()
             ->end();
 
         return $node;

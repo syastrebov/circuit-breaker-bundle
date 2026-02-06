@@ -68,6 +68,7 @@ final class CircuitBreakerBundleConfigTest extends TestCase
                     'password' => 'password',
                     'database' => 1,
                     'prefix' => 'circuit_breaker',
+                    'context' => []
                 ],
             ],
             'configurations' => [],
@@ -118,6 +119,7 @@ final class CircuitBreakerBundleConfigTest extends TestCase
                     'read_timeout' => 3,
                     'password' => 'password',
                     'prefix' => 'circuit_breaker',
+                    'context' => []
                 ],
             ],
             'configurations' => [],

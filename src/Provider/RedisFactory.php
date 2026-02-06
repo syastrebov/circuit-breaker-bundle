@@ -2,104 +2,94 @@
 
 namespace CircuitBreakerBundle\Provider;
 
-final class RedisFactory
+final class RedisFactory extends AbstractRedisFactory
 {
-    public static function create(array $config): \Redis|\RedisCluster
+    public function create(): \Redis|\RedisCluster
     {
         if (!extension_loaded('redis')) {
             throw new \RuntimeException('Redis extension is not loaded.');
         }
 
-        return !empty($config['nodes'])
-            ? self::createCluster($config)
-            : self::createSingle($config);
+        return !empty($this->getNodes())
+            ? $this->createCluster()
+            : $this->createSingle();
     }
 
-    public static function createSingle(array $config): \Redis
+    public function createSingle(): \Redis
     {
         $redis = new \Redis();
-        $persistent = (bool) ($config['persistent'] ?? false);
 
         $parameters = [
-            $config['host'] ?? '127.0.0.1',
-            $config['port'] ?? 6379,
-            $config['timeout'] ?? 0.0,
-            $persistent ? $config['persistent_id'] ?? null : null,
-            $config['retry_interval'] ?? 0,
+            $this->getHost(),
+            $this->getPort(),
+            $this->getTimeout(),
+            $this->getPersistentId(),
+            $this->getRetryInterval(),
         ];
 
-        $version = (string) phpversion('redis');
-        if ($version) {
-            if (version_compare($version, '3.1.3', '>=')) {
-                $parameters[] = $config['read_timeout'] ?? 0.0;
-            }
-
-            if (
-                version_compare($version, '5.3.0', '>=')
-                && !is_null($context = $config['context'] ?? null)
-            ) {
-                $parameters[] = $context;
-            }
+        if (
+            self::getVersion() && version_compare(self::getVersion(), '5.3.0', '>=')
+            && $this->getContext()
+        ) {
+            $parameters[] = $this->getContext();
         }
 
-        $redis->{$persistent ? 'pconnect' : 'connect'}(...$parameters);
+        $redis->{$this->isPersistent() ? 'pconnect' : 'connect'}(...$parameters);
 
-        if (array_key_exists('max_retries', $config)) {
-            $redis->setOption(\Redis::OPT_MAX_RETRIES, $config['max_retries']);
+        if (is_int($this->getMaxRetries())) {
+            $redis->setOption(\Redis::OPT_MAX_RETRIES, $this->getMaxRetries());
         }
 
-        $username = (string) ($config['username'] ?? null);
-        $password = (string) ($config['password'] ?? null);
-
-        if ($password) {
-            if ($username) {
+        if ($this->getPassword()) {
+            if ($this->getUsername()) {
                 /** @psalm-suppress InvalidCast */
                 /** @psalm-suppress InvalidArgument */
-                $redis->auth([$username, $password]);
+                $redis->auth([$this->getUsername(), $this->getPassword()]);
             } else {
-                $redis->auth($password);
+                $redis->auth($this->getPassword());
             }
         }
 
-        if (isset($config['database'])) {
-            $redis->select((int) $config['database']);
+        if (is_int($this->getDatabase())) {
+            $redis->select($this->getDatabase());
         }
 
-        if (!empty($config['prefix'])) {
-            $redis->setOption(\Redis::OPT_PREFIX, $config['prefix']);
+        if ($this->getPrefix()) {
+            $redis->setOption(\Redis::OPT_PREFIX, $this->getPrefix());
         }
 
-        if (!empty($config['read_timeout'])) {
-            $redis->setOption(\Redis::OPT_READ_TIMEOUT, $config['read_timeout']);
+        if ($this->getReadTimeout()) {
+            $redis->setOption(\Redis::OPT_READ_TIMEOUT, $this->getReadTimeout());
         }
 
         return $redis;
     }
 
-    public static function createCluster(array $config): \RedisCluster
+    public function createCluster(): \RedisCluster
     {
         $parameters = [
             null,
-            array_map(
-                fn (array $node) => $node['host'] . ':' . ($node['port'] ?? 6379),
-                $config['nodes'] ?? []
-            ),
-            $config['timeout'] ?? 0,
-            $config['read_timeout'] ?? 0,
-            isset($config['persistent']) && $config['persistent'],
+            $this->getNodes(),
+            $this->getTimeout(),
+            $this->getReadTimeout(),
+            $this->isPersistent(),
         ];
 
-        $version = (string)  phpversion('redis');
-        if ($version && version_compare($version, '4.3.0', '>=')) {
-            $parameters[] = $config['password'] ?? null;
+        if (self::getVersion() && version_compare(self::getVersion(), '4.3.0', '>=')) {
+            $parameters[] = $this->getPassword();
         }
 
         $redisCluster = new \RedisCluster(...$parameters);
 
-        if (!empty($config['prefix'])) {
-            $redisCluster->setOption(\Redis::OPT_PREFIX, $config['prefix']);
+        if ($this->getPrefix()) {
+            $redisCluster->setOption(\Redis::OPT_PREFIX, $this->getPrefix());
         }
 
         return $redisCluster;
+    }
+
+    private static function getVersion(): string
+    {
+        return (string) phpversion('redis');
     }
 }
