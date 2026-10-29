@@ -4,8 +4,11 @@ namespace CircuitBreakerBundle;
 
 use CircuitBreaker\CircuitBreaker;
 use CircuitBreaker\Contracts\CircuitBreakerInterface;
+use CircuitBreaker\Contracts\ProviderInterface;
 use CircuitBreaker\Enums\Provider;
 use CircuitBreakerBundle\DependencyInjection\Configuration;
+use CircuitBreakerBundle\EventListener\SchemaFilterListener;
+use CircuitBreakerBundle\Providers\DatabaseProviderFactory;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -40,54 +43,20 @@ final class CircuitBreakerBundle extends AbstractBundle
         $this->loadProvider($config, $container);
         $this->loadConfigurations($config, $container);
         $this->loadServices($config, $container);
-        $this->loadSchemaFilter($container, $builder);
+        $this->loadSchemaFilter($config, $container, $builder);
     }
 
     private function loadProvider(array $config, ContainerConfigurator $container): void
     {
         /** @var Provider $provider */
         $provider = $config['provider'];
-        $services = $container->services();
+        $connection = $config['connections'][$provider->value] ?? [];
 
-        $services->alias('circuit_breaker.provider', call_user_func(function () use ($provider): string {
-            $suffix = $provider->value;
-            if ($provider === Provider::Redis && !extension_loaded('redis')) {
-                if (class_exists(Client::class)) {
-                    $suffix = Provider::Predis->value;
-                } else {
-                    throw new \Exception('Redis is not installed.');
-                }
-            }
-
-            return 'circuit_breaker.provider.' . $suffix;
-        }))->public();
-
-        // redis
-        $services->get('circuit_breaker.driver.redis_factory')->args([
-            $config['connections']['redis'] ?? [],
-        ]);
-
-        $services->get('circuit_breaker.driver.predis_factory')->args([
-            $config['connections']['redis'] ?? [],
-        ]);
-
-        // memcached
-        $services->get('circuit_breaker.driver.memcached_factory')->args([
-            $config['connections']['memcached']['servers'] ?? [],
-        ]);
-
-        // database
-        $connection = $config['connections']['database']['connection'] ?? 'default';
-
-        $container->parameters()->set(
-            'circuit_breaker.driver.database.table',
-            $config['connections']['database']['table'] ?? 'circuit_breaker'
-        );
-
-        $services->get('circuit_breaker.driver.database')->factory([
-            service("doctrine.dbal.{$connection}_connection"),
-            'getNativeConnection'
-        ]);
+        $container->services()
+            ->set('circuit_breaker.provider', ProviderInterface::class)
+            ->factory([service("circuit_breaker.provider_factory.{$provider->value}"), 'create'])
+            ->args([$connection])
+            ->public();
     }
 
     private function loadConfigurations(array $config, ContainerConfigurator $container): void
@@ -148,23 +117,30 @@ final class CircuitBreakerBundle extends AbstractBundle
         }
     }
 
-    private function loadSchemaFilter(ContainerConfigurator $container, ContainerBuilder $builder): void
+    private function loadSchemaFilter(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
     {
         // add filter to ignore this table
-        if ($builder->hasParameter('circuit_breaker.driver.database.table')) {
-            $definition = $container
-                ->services()
-                ->get('circuit_breaker.schema_filter_listener')
-                ->args([param('circuit_breaker.driver.database.table')]);
+        if (($config['provider'] ?? null) !== Provider::Database) {
+            return;
+        }
 
-            if ($builder->hasParameter('doctrine.connections')) {
-                /** @var array<string, string> $connections */
-                $connections = $builder->getParameter('doctrine.connections');
-                foreach (array_keys($connections) as $connection) {
-                    $definition->tag('doctrine.dbal.schema_filter', [
-                        'connection' => $connection,
-                    ]);
-                }
+        $table = $config['connections']['database']['table'] ?? DatabaseProviderFactory::DEFAULT_TABLE;
+
+        $definition = $container->services()
+            ->set('circuit_breaker.schema_filter_listener', SchemaFilterListener::class)
+            ->args([$table])
+            ->tag('kernel.event_listener', [
+                'event' => 'console.command',
+                'method' => 'onConsoleCommand',
+            ]);
+
+        if ($builder->hasParameter('doctrine.connections')) {
+            /** @var array<string, string> $connections */
+            $connections = $builder->getParameter('doctrine.connections');
+            foreach (array_keys($connections) as $connection) {
+                $definition->tag('doctrine.dbal.schema_filter', [
+                    'connection' => $connection,
+                ]);
             }
         }
     }

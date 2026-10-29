@@ -20,6 +20,10 @@
         "symfony/config": "^7.4 || ^8.0",
         "symfony/http-kernel": "^7.4 || ^8.0"
     },
+    "suggest": {
+        "symfony/cache": "Required to configure Redis connections via DSN (^7.4 || ^8.0)",
+        "ext-redis": "Required for the redis driver"
+    },
     "require-dev": {
         "ext-redis": "*",
         "ext-memcached": "*",
@@ -36,7 +40,8 @@
         "vimeo/psalm": "^6.15",
         "predis/predis": "^3.3",
         "monolog/monolog": "^3.10",
-        "symfony/monolog-bundle": "^4.0"
+        "symfony/monolog-bundle": "^4.0",
+        "symfony/cache": "^7.4"
     },
     "autoload": {
         "psr-4": {

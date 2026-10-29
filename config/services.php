@@ -4,19 +4,12 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 use CircuitBreaker\CircuitBreaker;
 use CircuitBreaker\CircuitBreakerConfig;
-use CircuitBreaker\Contracts\CircuitBreakerInterface;
 use CircuitBreaker\Contracts\ProviderInterface;
-use CircuitBreaker\Providers\DatabaseProvider;
-use CircuitBreaker\Providers\MemcachedProvider;
-use CircuitBreaker\Providers\MemoryProvider;
-use CircuitBreaker\Providers\PredisProvider;
-use CircuitBreaker\Providers\RedisProvider;
 use CircuitBreakerBundle\CacheableCircuitBreaker;
-use CircuitBreakerBundle\EventListener\SchemaFilterListener;
-use CircuitBreakerBundle\Provider\MemcachedFactory;
-use CircuitBreakerBundle\Provider\PredisFactory;
-use CircuitBreakerBundle\Provider\RedisFactory;
-use Predis\Client;
+use CircuitBreakerBundle\Providers\DatabaseProviderFactory;
+use CircuitBreakerBundle\Providers\MemcachedProviderFactory;
+use CircuitBreakerBundle\Providers\MemoryProviderFactory;
+use CircuitBreakerBundle\Providers\RedisProviderFactory;
 
 return static function (ContainerConfigurator $container): void {
     $container->services()
@@ -41,45 +34,9 @@ return static function (ContainerConfigurator $container): void {
             ->public()
 
         // providers
-        ->set('circuit_breaker.provider.redis', RedisProvider::class)
-            ->args([service('circuit_breaker.driver.redis')])
-
-        ->set('circuit_breaker.provider.predis', PredisProvider::class)
-            ->args([service('circuit_breaker.driver.predis')])
-
-        ->set('circuit_breaker.provider.memcached', MemcachedProvider::class)
-            ->args([service('circuit_breaker.driver.memcached')])
-
-        ->set('circuit_breaker.provider.database', DatabaseProvider::class)
-            ->args([
-                service('circuit_breaker.driver.database'),
-                param('circuit_breaker.driver.database.table')
-            ])
-
-        ->set('circuit_breaker.provider.memory', MemoryProvider::class)
-
-        // drivers
-        ->set('circuit_breaker.driver.redis_factory', RedisFactory::class)
-
-        ->set('circuit_breaker.driver.redis', \Redis::class)
-        ->factory([service('circuit_breaker.driver.redis_factory'), 'create'])
-
-        ->set('circuit_breaker.driver.predis_factory', PredisFactory::class)
-
-        ->set('circuit_breaker.driver.predis', Client::class)
-        ->factory([service('circuit_breaker.driver.predis_factory'), 'create'])
-
-        ->set('circuit_breaker.driver.memcached_factory', MemcachedFactory::class)
-
-        ->set('circuit_breaker.driver.memcached', \Memcached::class)
-        ->factory([service('circuit_breaker.driver.memcached_factory'), 'create'])
-
-        ->set('circuit_breaker.driver.database', \PDO::class)
-
-        // listeners
-        ->set('circuit_breaker.schema_filter_listener', SchemaFilterListener::class)
-        ->tag('kernel.event_listener', [
-            'event' => 'console.command',
-            'method' => 'onConsoleCommand',
-        ]);
+        ->set('circuit_breaker.provider_factory.redis', RedisProviderFactory::class)
+        ->set('circuit_breaker.provider_factory.memcached', MemcachedProviderFactory::class)
+        ->set('circuit_breaker.provider_factory.database', DatabaseProviderFactory::class)
+            ->args([service('doctrine')->nullOnInvalid()])
+        ->set('circuit_breaker.provider_factory.memory', MemoryProviderFactory::class);
 };

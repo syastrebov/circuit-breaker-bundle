@@ -50,11 +50,21 @@ final class Configuration
         $node
             ->validate()
                 ->ifTrue(function (array $v): bool {
+                    return !empty($v['dsn']) && count(array_diff(array_keys($v), ['dsn', 'options'])) > 0;
+                })
+                ->thenInvalid('When "dsn" is set, only "options" is allowed alongside it. Put connection settings into the DSN or into "options".')
+            ->end()
+            ->validate()
+                ->ifTrue(function (array $v): bool {
                     return empty($v['host']) && empty($v['nodes']);
                 })
                 ->thenInvalid('You must set either "host" or "nodes".')
             ->end()
             ->children()
+                ->scalarNode('dsn')
+                    ->cannotBeEmpty()
+                    ->info('Redis DSN, e.g. "%env(REDIS_DSN)%". Mutually exclusive with host/nodes and the other connection fields.')
+                ->end()
                 ->scalarNode('host')->end()
                 ->integerNode('port')->end()
                 ->arrayNode('nodes')
@@ -94,6 +104,7 @@ final class Configuration
             ->children()
                 ->scalarNode('connection')->end()
                 ->scalarNode('table')
+                    ->defaultValue('circuit_breaker')
                     ->cannotBeEmpty()
                 ->end()
             ->end();
