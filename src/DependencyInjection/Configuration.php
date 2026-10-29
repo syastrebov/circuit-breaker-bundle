@@ -50,7 +50,9 @@ final class Configuration
         $node
             ->validate()
                 ->ifTrue(function (array $v): bool {
-                    return !empty($v['dsn']) && count(array_diff(array_keys($v), ['dsn', 'options'])) > 0;
+                    $restrictedProps = ['host', 'port', 'nodes', 'username', 'password'];
+
+                    return !empty($v['dsn']) && in_array($restrictedProps, array_keys($v));
                 })
             ->thenInvalid(
                 'When "dsn" is set, only "options" is allowed alongside it. '
