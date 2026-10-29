@@ -61,9 +61,9 @@ final class Configuration
             ->end()
             ->validate()
                 ->ifTrue(function (array $v): bool {
-                    return empty($v['host']) && empty($v['nodes']);
+                    return empty($v['dsn']) && empty($v['host']) && empty($v['nodes']);
                 })
-                ->thenInvalid('You must set either "host" or "nodes".')
+                ->thenInvalid('You must set either "dsn", "host" or "nodes".')
             ->end()
             ->children()
                 ->scalarNode('dsn')
