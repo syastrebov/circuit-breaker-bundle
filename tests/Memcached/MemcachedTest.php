@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\Provider\Memcached;
+namespace Tests\Memcached;
 
 use CircuitBreaker\CircuitBreaker;
 use CircuitBreaker\Providers\MemcachedProvider;

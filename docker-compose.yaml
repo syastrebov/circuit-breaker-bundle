@@ -70,6 +70,7 @@ services:
     build:
       context: .
       dockerfile: ./docker/php/Dockerfile
+      target: ${PHP_TARGET:-full}
     volumes:
       - ./:/var/www
     depends_on:

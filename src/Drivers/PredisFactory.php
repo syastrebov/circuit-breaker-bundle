@@ -8,9 +8,9 @@ use Predis\ClientInterface;
 
 final class PredisFactory
 {
-    public static function create(RedisConfig $config): Client
+    public static function create(RedisConfig $config): ClientInterface
     {
-        if (!class_exists(ClientInterface::class)) {
+        if (!interface_exists(ClientInterface::class)) {
             throw new \RuntimeException('Predis is not installed.');
         }
 
@@ -36,7 +36,7 @@ final class PredisFactory
         return $predis;
     }
 
-    public static function createCluster(RedisConfig $config): Client
+    public static function createCluster(RedisConfig $config): ClientInterface
     {
         $options = [
             'cluster' => 'redis',

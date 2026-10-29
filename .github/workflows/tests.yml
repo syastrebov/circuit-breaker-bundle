@@ -4,18 +4,75 @@ on:
   push:
 
 jobs:
-  php-unit:
-    name: PHP Unit
+  tests:
+    name: ${{ matrix.name }}
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Static analysis
+            suite: static
+            target: full
+            predis: true
+            cluster: false
+            services: ''
+
+          - name: Unit (no extensions, no predis)
+            suite: unit
+            target: base
+            predis: false
+            cluster: false
+            services: ''
+
+          - name: Predis fallback
+            suite: predis
+            target: base
+            predis: true
+            cluster: true
+            services: redis redis-auth redis-node-1 redis-node-2 redis-node-3 redis-auth-node-1 redis-auth-node-2 redis-auth-node-3
+
+          - name: Redis (ext-redis)
+            suite: redis
+            target: redis
+            predis: false
+            cluster: true
+            services: redis redis-auth redis-node-1 redis-node-2 redis-node-3 redis-auth-node-1 redis-auth-node-2 redis-auth-node-3
+
+          - name: Memcached
+            suite: memcached
+            target: memcached
+            predis: true
+            cluster: false
+            services: memcached
+
+          - name: PDO (mysql)
+            suite: pdo
+            target: pdo
+            predis: true
+            cluster: false
+            services: mysql
+
+    env:
+      PHP_TARGET: ${{ matrix.target }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Compose
-        run: docker compose up -d
+      - name: Setup PHP (host, for composer only)
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer
+          coverage: none
+
+      - name: Start containers
+        run: docker compose up -d --build --no-deps php ${{ matrix.services }}
 
       - name: Create redis cluster with auth
+        if: matrix.cluster
         run: |
           docker run --rm \
             --network symfony-circuit-breaker-tests \
@@ -30,6 +87,7 @@ jobs:
             --cluster-yes
 
       - name: Create redis cluster no auth
+        if: matrix.cluster
         run: |
           docker run --rm \
             --network symfony-circuit-breaker-tests \
@@ -42,14 +100,28 @@ jobs:
             --cluster-replicas 0 \
             --cluster-yes
 
+      - name: Remove predis
+        if: ${{ !matrix.predis }}
+        run: composer remove --dev predis/predis --no-update --ignore-platform-reqs
+
       - name: Composer install
-        run: composer install --optimize-autoloader --no-interaction --no-progress --prefer-dist --ignore-platform-reqs
+        if: matrix.predis
+        run: |
+          composer install --optimize-autoloader --no-interaction --no-progress --prefer-dist --ignore-platform-reqs
+          composer dump-autoload
+
+      - name: Composer update (without predis)
+        if: ${{ !matrix.predis }}
+        run: composer update --optimize-autoloader --no-interaction --no-progress --prefer-dist --ignore-platform-reqs
 
       - name: PHPStan
-        run: docker compose exec -t php vendor/bin/phpstan analyse src tests --memory-limit=256M
+        if: matrix.suite == 'static'
+        run: docker compose exec -T php vendor/bin/phpstan analyse src tests --memory-limit=256M
 
       - name: PHPcs
-        run: docker compose exec -t php vendor/bin/phpcs src tests
+        if: matrix.suite == 'static'
+        run: docker compose exec -T php vendor/bin/phpcs src tests
 
       - name: Run phpunit
-        run: docker compose exec -t php vendor/bin/phpunit
+        if: matrix.suite != 'static'
+        run: docker compose exec -T php vendor/bin/phpunit --testsuite ${{ matrix.suite }}

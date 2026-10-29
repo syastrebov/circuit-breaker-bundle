@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\Provider\Redis;
+namespace Tests\Redis;
 
 use CircuitBreaker\CircuitBreaker;
 use CircuitBreaker\Enums\CircuitBreakerState;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\Provider\Database;
+namespace Tests\Database;
 
 use CircuitBreaker\CircuitBreaker;
 use CircuitBreaker\Providers\DatabaseProvider;

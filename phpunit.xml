@@ -5,8 +5,20 @@
          colors="true"
 >
     <testsuites>
-        <testsuite name="Unit">
+        <testsuite name="unit">
             <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="redis">
+            <directory>tests/Redis</directory>
+        </testsuite>
+        <testsuite name="predis">
+            <directory>tests/Predis</directory>
+        </testsuite>
+        <testsuite name="memcached">
+            <directory>tests/Memcached</directory>
+        </testsuite>
+        <testsuite name="pdo">
+            <directory>tests/Database</directory>
         </testsuite>
     </testsuites>
     <source>

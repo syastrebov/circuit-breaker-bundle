@@ -22,7 +22,8 @@
     },
     "suggest": {
         "symfony/cache": "Required to configure Redis connections via DSN (^7.4 || ^8.0)",
-        "ext-redis": "Required for the redis driver"
+        "ext-redis": "Required for the redis driver",
+        "predis/predis": "Required for the predis driver (^3.3)"
     },
     "require-dev": {
         "ext-redis": "*",

@@ -18,16 +18,17 @@ final readonly class DatabaseProviderFactory implements ProviderFactoryInterface
     public function create(array $config): ProviderInterface
     {
         return new DatabaseProvider(
-            $this->getConnection(),
+            $this->getConnection($config),
             $config['table'] ?? self::DEFAULT_TABLE,
         );
     }
 
-    private function getConnection(): \PDO
+    private function getConnection(array $config): \PDO
     {
         if ($this->registry === null) {
             throw new \LogicException(
-                'The "database" provider requires doctrine/doctrine-bundle. Run "composer require doctrine/doctrine-bundle".'
+                'The "database" provider requires doctrine/doctrine-bundle. '
+                . 'Run "composer require doctrine/doctrine-bundle".'
             );
         }
 

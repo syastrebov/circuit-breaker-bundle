@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\Provider\Predis;
+namespace Tests\Predis;
 
 use CircuitBreaker\CircuitBreaker;
 use CircuitBreaker\Enums\CircuitBreakerState;
